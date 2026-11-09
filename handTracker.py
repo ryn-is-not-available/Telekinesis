@@ -33,12 +33,12 @@ class HandTracker:
 
     def findIndexFingerTip(self,img) :
 
-        cv2.flip(img, 1, img)
+        cv2.flip(img, 1,img)
         img_RGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img_RGB)
 
         self.results = self.detector.detect(mp_image)
-        x, y = None, None
+        x,y = None, None
         if self.results.hand_landmarks:
             for hand in self.results.hand_landmarks:
                 index_finger_tip = hand[8]  # Index finger tip is the 8th landmark
