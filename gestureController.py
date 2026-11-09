@@ -1,30 +1,38 @@
 import pyautogui as pg
 import math
+
 class GestureController:
-    def __init__(self,camera_width=640, camera_height=480):
-        self.camera_width,self.camera_height = camera_width, camera_height
+    def __init__(self, camera_width=640, camera_height=480):
+        self.camera_width, self.camera_height = camera_width, camera_height
         self.height, self.width = pg.size()  # Get the screen size
         self.isClicked = False
         self.oldThreeFingerPosition = None
 
+        self.prev_screen_x = 0
+        self.prev_screen_y = 0
+        self.smoothening = 0.5
+
     def moveCursor(self, x, y):
-        screen_x = int((x/self.camera_width) * self.width)
-        screen_y = int((y/self.camera_height) * self.height)
+        raw_screen_x = int((x / self.camera_width) * self.width)
+        raw_screen_y = int((y / self.camera_height) * self.height)
 
-        pg.moveTo(screen_x, screen_y)
+        smooth_x = int(self.prev_screen_x + (raw_screen_x - self.prev_screen_x) * self.smoothening)
+        smooth_y = int(self.prev_screen_y + (raw_screen_y - self.prev_screen_y) * self.smoothening)
 
-    def click(self,thumb_tip, index_finger_tip):
-        
-        distance = math.sqrt((thumb_tip[0] - index_finger_tip[0])**2 + (thumb_tip[1] - index_finger_tip[1])**2)
-        if distance <= 30 and not self.isClicked:
-            pg.click()
-            self.isClicked = True
+        pg.moveTo(smooth_x, smooth_y)
 
-    def releaseClick(self,thumb_tip, index_finger_tip):
-        distance = math.sqrt((thumb_tip[0] - index_finger_tip[0])**2 + (thumb_tip[1] - index_finger_tip[1])**2)
-        if distance > 30 and self.isClicked:
+        self.prev_screen_x = smooth_x
+        self.prev_screen_y = smooth_y
+
+    def handleClick(self, thumb_tip, middle_tip):
+        distance = math.hypot(thumb_tip[0] - middle_tip[0], thumb_tip[1] - middle_tip[1])
+
+        if distance <= 30:
+            if not self.isClicked:
+                pg.click()          
+                self.isClicked = True 
+        else:
             self.isClicked = False
-
 
     def threeFingerGesture(self, ring_finger_tip, index_finger_tip, middle_finger_tip):
         # Calculate distances between the three finger tips
@@ -40,13 +48,13 @@ class GestureController:
                     [middle_finger_tip[0], middle_finger_tip[1]], 
                     [ring_finger_tip[0], ring_finger_tip[1]]
                 )
-                return
+                return True  # Handled / Locked into gesture mode
 
             # Calculate movement delta for the middle finger (acting as the anchor of the cluster)
             delta_y = middle_finger_tip[1] - self.oldThreeFingerPosition[1][1]
             delta_x = middle_finger_tip[0] - self.oldThreeFingerPosition[1][0]
 
-            # Threshold for triggering gestures to avoid micro-jitters
+            
             SWIPE_THRESHOLD = 30
 
             if delta_y > SWIPE_THRESHOLD:
@@ -59,12 +67,13 @@ class GestureController:
                 self.oldThreeFingerPosition = None
             elif abs(delta_x) > SWIPE_THRESHOLD:
                 if delta_x > 0:
-                    # Swiped Right: Alt+Tab forward
                     pg.hotkey('alt', 'tab')
                 else:
-                    # Swiped Left: Alt+Tab backward (or Win+Tab)
                     pg.hotkey('win', 'tab')
                 self.oldThreeFingerPosition = None
+                
+            return True
         else:
-            # If fingers separate, reset the anchor position
+            
             self.oldThreeFingerPosition = None
+            return False
