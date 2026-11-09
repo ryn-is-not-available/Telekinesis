@@ -12,23 +12,25 @@ class HandTracker:
         )
         self.detector = vision.HandLandmarker.create_from_options(options)
 
-    def findHands(self, img):
-        # Convert OpenCV BGR to RGB
+    def findHands(self, img, hand_no=0):
+        landmarks = []
+        # Convert OpenCV BGR to 
+        cv2.flip(img, 1, img)
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
-        
         self.results = self.detector.detect(mp_image)
 
         if self.results.hand_landmarks:
-            for hand in self.results.hand_landmarks:
-                for landmark in hand:
-                    x = int(landmark.x * img.shape[1])
-                    y = int(landmark.y * img.shape[0])
-                    cv2.circle(img, (x, y), 5, (255, 0, 0), cv2.FILLED)
+            myHand = self.results.hand_landmarks[hand_no]
+            h, w, c = img.shape 
+            for id, landmark in enumerate(myHand):
+                cx = int(landmark.x * w)
+                cy = int(landmark.y * h)
+                landmarks.append([id, cx, cy])
+                cv2.circle(img, (cx, cy), 5, (255, 0, 0), cv2.FILLED)
 
+        return img, landmarks
         
-        return img
 
 
     def findIndexFingerTip(self,img) :

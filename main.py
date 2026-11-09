@@ -1,24 +1,46 @@
 import cv2
-import handTracker as ht
-import pyautogui as pg
+from handTracker import HandTracker
+from gestureController import GestureController
 
-def main():
-    cap = cv2.VideoCapture(0)
-    detector = ht.HandTracker()
-
-    while True:
-        success, img = cap.read()
-        img, x, y = detector.findIndexFingerTip(img)
-        if x is not None and y is not None:
-            screen_x = (x / img.shape[1]) * pg.size().width
-            screen_y = (y / img.shape[0]) * pg.size().height
-            pg.moveTo(screen_x, screen_y)
-        cv2.imshow("Image", img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+wCam, hCam = 640, 480
+cap = cv2.VideoCapture(0)
+cap.set(3, wCam)
+cap.set(4, hCam)
 
 
+tracker = HandTracker()
+controller = GestureController(camera_width=wCam, camera_height=hCam)
 
+while True:
+    success, img = cap.read()
+    if not success:
+        break
 
-if __name__ == "__main__":
-    main()
+  
+    
+    img , lm_list = tracker.findHands(img)
+
+    if len(lm_list) != 0:
+        
+        thumb_tip = lm_list[4][1:]
+        index_tip = lm_list[8][1:]       
+        middle_tip = lm_list[12][1:]     
+        ring_tip = lm_list[16][1:]       
+
+        
+        controller.moveCursor(index_tip[0], index_tip[1])
+
+        
+        controller.click(thumb_tip, index_tip)
+        controller.releaseClick(thumb_tip, index_tip)
+
+        
+        controller.threeFingerGesture(ring_tip, index_tip, middle_tip)
+
+    cv2.imshow("Air-Mouse Tracker", img)
+    
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
