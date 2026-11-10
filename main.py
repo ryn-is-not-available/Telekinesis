@@ -30,7 +30,7 @@ while True:
     middle_tip = lm_list[12][1:]
     ring_tip = lm_list[16][1:]
 
-    is_gesture_active = controller.threeFingerGesture(ring_tip, index_tip, middle_tip)
+    is_gesture_active = controller.fistControlGesture(lm_list)
 
     if not is_gesture_active:
         controller.moveCursor(index_tip[0], index_tip[1])
