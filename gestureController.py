@@ -3,8 +3,9 @@ import math
 
 class GestureController:
     def __init__(self, camera_width=640, camera_height=480):
+        pg.PAUSE = 0
         self.camera_width, self.camera_height = camera_width, camera_height
-        self.height, self.width = pg.size()  # Get screen size
+        self.width , self.height = pg.size()
         self.isClicked = False
         self.oldFistPosition = None
 
