@@ -2,6 +2,7 @@ import cv2
 from handTracker import HandTracker
 from gestureController import GestureController
 from videoStream import VideoStream
+from landmarks import landmark
 
 tracker = HandTracker()
 controller = GestureController()
@@ -22,9 +23,9 @@ try:
                 break
             continue
 
-        thumb_tip = lm_list[4][1:]
-        index_tip = lm_list[8][1:]
-        middle_tip = lm_list[12][1:]
+        thumb_tip = lm_list[landmark.THUMB_TIP][1:]
+        index_tip = lm_list[landmark.INDEX_TIP][1:]
+        middle_tip = lm_list[landmark.MIDDLE_TIP][1:]
 
         is_gesture_active = controller.fistControlGesture(lm_list)
 

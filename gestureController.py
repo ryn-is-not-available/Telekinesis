@@ -1,5 +1,7 @@
 import pyautogui as pg
 import math
+from mapping import mapAxis
+from landmarks import landmark
 
 class GestureController:
     def __init__(self, camera_width=640, camera_height=480):
@@ -14,8 +16,8 @@ class GestureController:
         self.smoothening = 0.5
 
     def moveCursor(self, x, y):
-        raw_screen_x = int((x / self.camera_width) * self.width)
-        raw_screen_y = int((y / self.camera_height) * self.height)
+        raw_screen_x = mapAxis((x / self.camera_width), 0.3, self.width)
+        raw_screen_y = mapAxis((y / self.camera_height), 0.3, self.height)
 
         smooth_x = int(self.prev_screen_x + (raw_screen_x - self.prev_screen_x) * self.smoothening)
         smooth_y = int(self.prev_screen_y + (raw_screen_y - self.prev_screen_y) * self.smoothening)
@@ -39,12 +41,9 @@ class GestureController:
         Returns True if all four main fingertips (index, middle, ring, pinky) 
         are curled inward towards the palm/wrist compared to their PIP joints.
         """
-        # Landmarks:
-        # Tips: Index(8), Middle(12), Ring(16), Pinky(20)
-        # PIPs: Index(6), Middle(10), Ring(14), Pinky(18)
         
-        tips = [8, 12, 16, 20]
-        pips = [6, 10, 14, 18]
+        tips = [landmark.INDEX_TIP, landmark.MIDDLE_TIP, landmark.RING_TIP, landmark.PINKY_TIP]
+        pips = [landmark.INDEX_PIP, landmark.MIDDLE_PIP, landmark.RING_PIP, landmark.PINKY_PIP]
         
         curled_count = 0
         for tip, pip in zip(tips, pips):
@@ -67,8 +66,8 @@ class GestureController:
             self.oldFistPosition = None
             return False
 
-        # Use wrist (landmark 0) or center of palm as the anchor for pulling motion
-        wrist = lm_list[0]
+        
+        wrist = lm_list[landmark.WRIST]
         fist_current_pos = [wrist[1], wrist[2]]
 
         if self.oldFistPosition is None:
