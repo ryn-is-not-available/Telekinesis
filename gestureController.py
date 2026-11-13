@@ -1,10 +1,14 @@
 import pyautogui as pg
 import math
+import time
+import config
 from mapping import mapAxis
 from landmarks import landmark
 
+
+
 class GestureController:
-    def __init__(self, camera_width=640, camera_height=480):
+    def __init__(self, camera_width=config.CAMERA_WIDTH, camera_height=config.CAMERA_HEIGHT):
         pg.PAUSE = 0
         self.camera_width, self.camera_height = camera_width, camera_height
         self.width , self.height = pg.size()
@@ -13,7 +17,9 @@ class GestureController:
 
         self.prev_screen_x = 0
         self.prev_screen_y = 0
-        self.smoothening = 0.5
+        self.smoothening = config.SMOOTHING_FACTOR
+
+        self.last_action_time = 0
 
     def moveCursor(self, x, y):
         raw_screen_x = mapAxis((x / self.camera_width), 0.3, self.width)
@@ -47,10 +53,6 @@ class GestureController:
         
         curled_count = 0
         for tip, pip in zip(tips, pips):
-            # In screen coordinates, a curled finger has a tip y-coordinate 
-            # equal to or greater than (lower on screen) its knuckle (pip), 
-            # or significantly closer to the wrist (landmark 0).
-            # Let's check vertical curl position: tip[2] >= pip[2]
             if lm_list[tip][2] >= lm_list[pip][2]:
                 curled_count += 1
                 
@@ -77,22 +79,28 @@ class GestureController:
         # Calculate pull deltas
         delta_y = fist_current_pos[1] - self.oldFistPosition[1]
         delta_x = fist_current_pos[0] - self.oldFistPosition[0]
+        print(f"Delta X: {delta_x}, Delta Y: {delta_y}")
+        # Pixels of movement required to trigger action
+        if time.monotonic() - self.last_action_time < config.COOLDOWN:
+            return True  
 
-        PULL_THRESHOLD = 40  # Pixels of movement required to trigger action
+        if abs(delta_y) > abs(delta_x):
+            if delta_y > config.PULL_THRESHOLD:
+                # Pulled Down: Show Desktop / Minimize
+                pg.hotkey('win', 'd')
+                self.oldFistPosition = None
+            elif delta_y < -config.PULL_THRESHOLD:
+                # Pulled Up: Restore / Switch
+                pg.hotkey('win', 'd')
+                self.oldFistPosition = None
+        else :
+            if abs(delta_x) > config.PULL_THRESHOLD:
+                if delta_x > 0:
+                    pg.hotkey('alt', 'tab')  # Pull Right
+                else:
+                    pg.hotkey('win', 'tab')  # Pull Left
+                self.oldFistPosition = None
+        
 
-        if delta_y > PULL_THRESHOLD:
-            # Pulled Down: Show Desktop / Minimize
-            pg.hotkey('win', 'd')
-            self.oldFistPosition = None
-        elif delta_y < -PULL_THRESHOLD:
-            # Pulled Up: Restore / Switch
-            pg.hotkey('win', 'd')
-            self.oldFistPosition = None
-        elif abs(delta_x) > PULL_THRESHOLD:
-            if delta_x > 0:
-                pg.hotkey('alt', 'tab')  # Pull Right
-            else:
-                pg.hotkey('win', 'tab')  # Pull Left
-            self.oldFistPosition = None
 
-        return True  # Still in fist-control mode
+        return True

@@ -33,6 +33,8 @@ try:
             controller.moveCursor(index_tip[0], index_tip[1])
             controller.handleClick(thumb_tip, middle_tip)
 
+        label = "FIST" if controller.isFist(lm_list) else "OPEN"
+        cv2.putText(img, label, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.imshow("Air-Mouse Tracker", img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
